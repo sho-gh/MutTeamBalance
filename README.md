@@ -9,7 +9,8 @@ It is a server-side mutator. Players download only one small message package
 
 **Version 1.1.1** (see [CHANGELOG.md](CHANGELOG.md)). Builds with UCC 3374
 (0 errors, 0 warnings). The last version tested on a live server is 1.0.5;
-**1.0.6 to 1.1.1 have not yet been tested in a game.**
+**1.0.6 to 1.1.1 have not yet been tested in a game** (checklist:
+[TESTING.md](TESTING.md)).
 
 ## Contents
 
@@ -53,6 +54,17 @@ that hosts the bot. Every 2 minutes it:
 Its settings, including the FTP login, go in `Tools\GetPlayerRankings.config.psd1`.
 Copy [`GetPlayerRankings.config.example.psd1`](Tools/GetPlayerRankings.config.example.psd1)
 to that name and fill it in. The real file is ignored by git, so it can't be committed.
+
+**Running it.** The script runs in an endless loop, so start it once and
+leave it running, ideally automatically when the bot PC starts. It works in
+the Windows PowerShell 5.1 that comes with Windows; nothing else is needed.
+For example, in Task Scheduler create a task that runs at startup with:
+
+```
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\Tools\GetPlayerRankings.ps1"
+```
+
+Each run is logged to the `LogFile` set in the config (`UploadHistory.log`).
 
 > **The game reads the ratings file only when the server process starts.**
 > A map change does not re-read it. Restart the server to pick up new ratings,
@@ -140,6 +152,14 @@ escalation off.
 **Tournament mode.** Balancing is off while a game password is set
 (`bAutoTournamentOnPassword`) or when `bTournamentMode` is on.
 
+**The game's own team rules stay on.** The stock "players balance teams"
+option (`bPlayersBalanceTeams` in `UT2004.ini`, on by default) keeps
+players from joining or switching to the bigger team, which also stops a
+moved player from simply switching back. The mutator lifts it only for the
+instant it moves someone. Check that it is `True` under
+`[UnrealGame.TeamGame]` on your server: mutator versions before 1.1.1
+switched it off, and a WebAdmin save could have written that to the ini.
+
 ## What players see
 
 With `bTopMessages` on (the default), notices appear at the top of the
@@ -209,7 +229,6 @@ expected to apply from the next map (not yet confirmed in testing).
 | `bChatCommands` | True | Allow the `!balance` and `!teams` player commands. |
 | `ChatCommandCooldown` | 60 | Seconds between uses of the player commands (server-wide). |
 | `bLogSightings` | True | Record each GUID's names and IP addresses in `TeamBalanceSightings.ini`. |
-| `bDisableStockBalancing` | True | Turn off the game's own team balancing. |
 | `DefaultUnknownRating` | 25.0 | Mu for players not in the ratings file. |
 | `DefaultUnknownSigma` | 8.333 | Sigma for players not in the ratings file. |
 | `DefaultUnknownElo` | 0.0 | Elo for players not in the ratings file. |
@@ -247,6 +266,8 @@ TimesSeen=12
 `KnownIPs` are raw addresses (no port). `TimesSeen` counts maps. Whoever
 processes this file should hash the IPs with a secret salt and discard the
 raw values. The report that reads it is not part of this repository.
+The file is never trimmed, so clear it from time to time once it has been
+processed (with the server stopped).
 
 ## Ratings file format
 

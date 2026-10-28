@@ -14,6 +14,16 @@ Versions 1.0.6 to 1.1.1 have not yet been tested on a live server.
 - The version is shown in the startup log line and in `!balance status`.
 - WebAdmin text for `bAnnounce` corrected: it controls all public messages
   (screen and chat), not just chat.
+- The game's own "players can't join the bigger team" rule
+  (`bPlayersBalanceTeams`) stays on; the mutator lifts it only for the instant
+  it moves someone. Before, `bDisableStockBalancing` switched it off for the
+  whole map, so players could stack a team or switch straight back after a
+  move, and a WebAdmin save could write "off" into `UT2004.ini` permanently.
+  `bDisableStockBalancing` is removed, and bot balancing (`bBalanceTeams`)
+  is no longer touched.
+- Moves made during warmup no longer count toward `MaxMovesPerPlayer`; the
+  counts are reset when the match starts.
+- WebAdmin: "Enable !balance / !teams" listed with the other chat settings.
 - Ratings upload script `Tools/GetPlayerRankings.ps1` added (replaces
   `validate_ratings.py`):
   - alt GUIDs get the numbers of the member's most-played GUID; before, an

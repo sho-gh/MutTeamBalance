@@ -15,6 +15,16 @@
 //          * the version is shown in the startup log line and !balance status.
 //          * WebAdmin text for bAnnounce corrected: it covers all public
 //            messages (screen and chat), not just chat.
+//          * the game's own "players can't join the bigger team" rule
+//            (bPlayersBalanceTeams) stays on. It is lifted only for the
+//            instant the mutator moves someone (it would refuse swaps on even
+//            teams). Before, bDisableStockBalancing switched it off for the
+//            whole map, so players could stack a team or switch straight
+//            back, and a WebAdmin save could write "off" into UT2004.ini for
+//            good. bDisableStockBalancing is removed; bots' balancing
+//            (bBalanceTeams) is no longer touched.
+//          * moves made during warmup no longer count toward
+//            MaxMovesPerPlayer: the counts are reset when the match starts.
 // v1.1.0 - Player notifications:
 //          * messages show at the top of the screen, stacked under the CTF
 //            notices, colored by team (bTopMessages). Needs the small client
@@ -156,7 +166,6 @@ var config float          TargetGap;              // once acting, aim for this g
 var config int            MoveCooldown;           // seconds between automatic passes
 var config bool           bTournamentMode;        // manual override: balancing off
 var config bool           bAutoTournamentOnPassword;
-var config bool           bDisableStockBalancing;
 var config bool           bChatCommands;
 var config bool           bAnnounce;
 var config bool           bLogSightings;
@@ -252,12 +261,6 @@ function PostBeginPlay()
         BH = Spawn(class'TeamBalanceBH');
         BH.Mut = Self;
         Level.Game.BroadcastHandler.RegisterBroadcastHandler(BH);
-    }
-
-    if (bDisableStockBalancing && TeamGame(Level.Game) != None)
-    {
-        TeamGame(Level.Game).bBalanceTeams = false;
-        TeamGame(Level.Game).bPlayersBalanceTeams = false;
     }
 
     SetTimer(PollInterval, true);
@@ -457,7 +460,7 @@ function Timer()
 function SlowTimer()
 {
     local bool bActive, bStart;
-    local int Sig;
+    local int Sig, i;
 
     bActive = BalancingActive();
     if (bActive != bWasActive)
@@ -475,6 +478,9 @@ function SlowTimer()
 
     if (bStart)
     {
+        // Warmup moves are free (nobody has a pawn); don't count them against the match.
+        for (i = 0; i < TrkMoves.Length; i++)
+            TrkMoves[i] = 0;
         AnnounceOnOff(bActive);
         LogRatingCoverage();
     }
@@ -669,7 +675,6 @@ function int RosterIndexOf(Controller C)
     return -1;
 }
 
-// bAnyone = true at match start / warmup, or when fixing a team-size gap.
 // bAnyone = true at match start / warmup, when escalated, or when fixing a team-size gap.
 function bool Movable(int i, bool bAnyone)
 {
@@ -725,10 +730,6 @@ function bool NearEnd()
     return false;
 }
 
-// Finds the single move or swap that lowers the gap the most.
-// Size rule: teams must stay within 1 player of each other.
-// Finds the best move (and, at match start/warmup only, the best swap).
-// Size rule: teams must stay within 1 player of each other.
 // Finds the best move (and, at match start/warmup or when escalated, the best swap).
 // Size rule: teams must stay within 1 player of each other.
 function bool FindBestAction(float GapNow, bool bFull, out int BestA, out int BestB)
@@ -783,6 +784,8 @@ function bool FindBestAction(float GapNow, bool bFull, out int BestA, out int Be
 function bool ExecuteMove(Controller C, int NewTeam, out string MovedText)
 {
     local int T;
+    local TeamGame TG;
+    local bool bOldRule, bChanged;
 
     if (C == None || C.PlayerReplicationInfo == None)
         return false;
@@ -791,7 +794,19 @@ function bool ExecuteMove(Controller C, int NewTeam, out string MovedText)
     // are queued instead and switched at their next death.
     if (C.Pawn != None)
         return false;
-    if (!Level.Game.ChangeTeam(C, NewTeam, false))
+    // The stock "join the smaller team" rule would refuse a move onto an
+    // equal-sized team (first half of a swap). Lift it for this call only, so
+    // players keep it, and it is never saved to UT2004.ini as off.
+    TG = TeamGame(Level.Game);
+    if (TG != None)
+    {
+        bOldRule = TG.bPlayersBalanceTeams;
+        TG.bPlayersBalanceTeams = false;
+    }
+    bChanged = Level.Game.ChangeTeam(C, NewTeam, false);
+    if (TG != None)
+        TG.bPlayersBalanceTeams = bOldRule;
+    if (!bChanged)
         return false;
     // Stock code logs this only for new joiners (bNewTeam=true); do it ourselves
     // so OLStats / the stats bot see the move. GameEvent is not on GameInfo,
@@ -1495,11 +1510,10 @@ static function FillPlayInfo(PlayInfo PlayInfo)
     PlayInfo.AddSetting("Team Balance", "bNotifyMoved",             "Tell moved players why", 0, 131, "Check");
     PlayInfo.AddSetting("Team Balance", "bTopMessages",             "Show messages at the top of the screen", 0, 132, "Check");
     PlayInfo.AddSetting("Team Balance", "bCenterMessages",          "Show messages center-screen (if not at the top)", 0, 133, "Check");
-    PlayInfo.AddSetting("Team Balance", "bChatCommands",            "Enable !balance / !teams",     0, 130, "Check");
+    PlayInfo.AddSetting("Team Balance", "bChatCommands",            "Enable !balance / !teams",     0, 135, "Check");
     PlayInfo.AddSetting("Team Balance", "ChatCommandCooldown",      "Chat command cooldown (s)",    0, 140, "Text", "4;0:600");
     PlayInfo.AddSetting("Team Balance", "bAnnounce",                "Announce balancing to everyone", 0, 150, "Check");
     PlayInfo.AddSetting("Team Balance", "bLogSightings",            "Record GUID sightings",        0, 160, "Check");
-    PlayInfo.AddSetting("Team Balance", "bDisableStockBalancing",   "Turn off stock team balancing",0, 170, "Check");
     PlayInfo.AddSetting("Team Balance", "DefaultUnknownRating",     "Default mu for unknown GUIDs", 0, 180, "Text", "8;0.0:100.0");
     PlayInfo.AddSetting("Team Balance", "DefaultUnknownSigma",      "Default sigma for unknown GUIDs", 0, 190, "Text", "8;0.0:100.0");
     PlayInfo.AddSetting("Team Balance", "DefaultUnknownElo",        "Default Elo for unknown GUIDs",0, 200, "Text", "8;0.0:10000.0");
@@ -1535,7 +1549,6 @@ static event string GetDescriptionText(string PropName)
         case "ChatCommandCooldown":       return "Seconds between uses of the chat commands (server-wide).";
         case "bAnnounce":                 return "Show balancing news to everyone (on screen and in chat): queued and completed moves, cancellations, ON/OFF. When off, only the players being moved are told.";
         case "bLogSightings":             return "Record each GUID's names and IPs for the new-GUID/alt report.";
-        case "bDisableStockBalancing":    return "Switch off the game's own team balancing while this mutator runs.";
         case "DefaultUnknownRating":      return "Mu assigned to GUIDs missing from the ratings file (never-rated players use 25).";
         case "DefaultUnknownSigma":       return "Sigma assigned to unknown GUIDs.";
         case "DefaultUnknownElo":         return "Elo assigned to unknown GUIDs.";
@@ -1564,7 +1577,6 @@ defaultproperties
     MoveCooldown=60
     bTournamentMode=False
     bAutoTournamentOnPassword=True
-    bDisableStockBalancing=True
     bChatCommands=True
     bAnnounce=True
     bLogSightings=True
