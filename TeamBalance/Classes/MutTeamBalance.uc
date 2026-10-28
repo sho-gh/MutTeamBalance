@@ -25,6 +25,13 @@
 //            (bBalanceTeams) is no longer touched.
 //          * numbers in chat and the log printed with a stray ".00"
 //            ("avg 31.2.00"): Fmt1 used %, which is float-only.
+//          * chat command replies appeared twice: the stock handler chain
+//            calls AcceptBroadcastText twice per message. TeamBalanceBH now
+//            handles each message once.
+//          * chat lines showed the receiving player's name in front
+//            ("Name: [TeamBalance] ..."), as if they had typed them; they are
+//            now sent with no sender. Clearer wording for the cooldown,
+//            admin-only and too-few-players replies.
 //          * moves made during warmup no longer count toward
 //            MaxMovesPerPlayer: the counts are reset when the match starts.
 // v1.1.0 - Player notifications:
@@ -409,7 +416,7 @@ function ShowStatus(PlayerController PC)
 
     if (PC.PlayerReplicationInfo == None || !PC.PlayerReplicationInfo.bAdmin)
     {
-        Tell(PC, "Only admins can use that.");
+        Tell(PC, "!balance status is for admins only.");
         return;
     }
     if (BalancingActive())
@@ -1193,7 +1200,7 @@ function RunBalance(bool bMatchStart, bool bAnnounceAlways)
             AnnounceMsg(MSG_BALANCED, None, None, "", TeamSummary() $ MovedText);
     }
     else if (bAnnounceAlways)
-        Announce("No suitable move available", TeamSummary());
+        Announce("No suitable move found", TeamSummary());
     else
     {
         if (bEscalated) Note = " (escalated)";
@@ -1251,8 +1258,8 @@ function HandleChat(PlayerController PC, string Msg)
 
     if (Level.TimeSeconds - LastCmdTime < ChatCommandCooldown)
     {
-        Tell(PC, "Please wait "
-            $ (ChatCommandCooldown - int(Level.TimeSeconds - LastCmdTime)) $ "s before using that again.");
+        Tell(PC, "Try again in " $ (ChatCommandCooldown - int(Level.TimeSeconds - LastCmdTime))
+            $ " seconds - !balance and !teams can be used once every " $ ChatCommandCooldown $ " seconds.");
         return;
     }
     LastCmdTime = Level.TimeSeconds;
@@ -1300,7 +1307,8 @@ function ProcessPending()
     if (!BalancingActive())
         Tell(PendingPC, "Team balancing is off (" $ InactiveReason() $ ").");
     else if (BuildRoster() < MinPlayersForBalance)
-        Tell(PendingPC, "Needs at least " $ MinPlayersForBalance $ " human players.");
+        Tell(PendingPC, "Team balancing needs at least " $ MinPlayersForBalance
+            $ " human players (bots and spectators don't count).");
     else if (PendingCmd == 1)
         Tell(PendingPC, TeamSummary());
     else
@@ -1363,13 +1371,16 @@ function SendNotice(PlayerController PC, int Switch, PlayerReplicationInfo P1, P
         if (Switch >= 0)
             PC.ReceiveLocalizedMessage(class'TeamBalanceMsg_V1.TeamBalanceMessage', Switch, P1, P2);
     }
+    // TeamMessage with no sender, not ClientMessage: ClientMessage passes the
+    // player's own PRI, so the chat log showed "<their name>: [TeamBalance] ..."
+    // as if they had typed it.
     else if (bCenterMessages)
-        PC.ClientMessage(Msg, 'CriticalEvent');
+        PC.TeamMessage(None, Msg, 'CriticalEvent');
     if (bQuiet)
         return;
     if (Details != "")
         Msg = Msg $ " | " $ Details;
-    PC.ClientMessage("[TeamBalance] " $ Msg, 'Event');
+    PC.TeamMessage(None, "[TeamBalance] " $ Msg, 'Event');
 }
 
 // Public message with a TeamBalanceMessage switch (-1 = text only).

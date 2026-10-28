@@ -20,6 +20,7 @@ players are needed (separate PCs or accounts).
 - [ ] `!balance off` / `!balance on` work in normal and in team chat, also
       with `bChatCommands=False`.
 - [ ] `!teams` and `!balance` work for normal players and respect the cooldown.
+- [ ] Each `[TeamBalance]` reply appears once, without your own name in front.
 - [ ] Match start: living players are queued ("will switch at their next
       death") and switch when they die. Note how many queued moves are
       cancelled as "no longer needed" when several are queued at once.

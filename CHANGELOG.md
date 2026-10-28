@@ -23,6 +23,11 @@ Versions 1.0.6 to 1.1.1 have not yet been tested on a live server.
   is no longer touched.
 - Numbers in chat, `!teams`, `!balance status` and the server log no longer
   carry a stray `.00` ("avg 31.2.00"). Found by starting a local server.
+- Chat command replies no longer appear twice (the game passes each chat
+  message through the handler chain twice).
+- `[TeamBalance]` chat lines no longer show the receiving player's own name in
+  front, as if they had typed them. Clearer wording for the cooldown,
+  admin-only and too-few-players replies.
 - Moves made during warmup no longer count toward `MaxMovesPerPlayer`; the
   counts are reset when the match starts.
 - WebAdmin: "Enable !balance / !teams" listed with the other chat settings.
