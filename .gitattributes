@@ -1,0 +1,6 @@
+# UT2004 tools expect Windows line endings; keep them CRLF on every checkout.
+*.uc   text eol=crlf
+*.ini  text eol=crlf
+*.txt  text eol=crlf
+*.py   text eol=lf
+*.pdf  binary

@@ -1,0 +1,15 @@
+# Player data: GUIDs and raw IP addresses. Never commit.
+TeamBalanceRatings.ini
+TeamBalanceSightings.ini
+
+# Server settings (may hold admin choices for a specific server)
+MutTeamBalance.ini
+
+# Build output (built in D:\UT2004\System by "ucc make")
+*.u
+*.ucl
+*.uz2
+
+# Python
+__pycache__/
+*.pyc
