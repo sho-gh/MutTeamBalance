@@ -13,6 +13,8 @@
 //            process), so it could never succeed; a failed load now logs the
 //            checklist straight away.
 //          * the version is shown in the startup log line and !balance status.
+//          * WebAdmin text for bAnnounce corrected: it covers all public
+//            messages (screen and chat), not just chat.
 // v1.1.0 - Player notifications:
 //          * messages show at the top of the screen, stacked under the CTF
 //            notices, colored by team (bTopMessages). Needs the small client
@@ -328,7 +330,7 @@ function LoadRatings()
             for (j = 0; j < i; j++)
                 if (CacheGuid[i] == CacheGuid[j]) { nDup++; break; }
 
-    // optional integrity header written by validate_ratings.py
+    // optional integrity header written by Tools\GetPlayerRankings.ps1
     if (class'TeamBalanceRatings'.default.FormatVersion == 0)
         Log("[TeamBalance] note: ratings file has no FormatVersion/ExpectedCount header lines (older script) - integrity check skipped");
     else
@@ -1495,7 +1497,7 @@ static function FillPlayInfo(PlayInfo PlayInfo)
     PlayInfo.AddSetting("Team Balance", "bCenterMessages",          "Show messages center-screen (if not at the top)", 0, 133, "Check");
     PlayInfo.AddSetting("Team Balance", "bChatCommands",            "Enable !balance / !teams",     0, 130, "Check");
     PlayInfo.AddSetting("Team Balance", "ChatCommandCooldown",      "Chat command cooldown (s)",    0, 140, "Text", "4;0:600");
-    PlayInfo.AddSetting("Team Balance", "bAnnounce",                "Announce in chat",             0, 150, "Check");
+    PlayInfo.AddSetting("Team Balance", "bAnnounce",                "Announce balancing to everyone", 0, 150, "Check");
     PlayInfo.AddSetting("Team Balance", "bLogSightings",            "Record GUID sightings",        0, 160, "Check");
     PlayInfo.AddSetting("Team Balance", "bDisableStockBalancing",   "Turn off stock team balancing",0, 170, "Check");
     PlayInfo.AddSetting("Team Balance", "DefaultUnknownRating",     "Default mu for unknown GUIDs", 0, 180, "Text", "8;0.0:100.0");
@@ -1531,7 +1533,7 @@ static event string GetDescriptionText(string PropName)
         case "bCenterMessages":           return "Only used when top-of-screen messages are off: show balancing messages as center-screen text. Turn both off to use the chat feed only.";
         case "bChatCommands":             return "Let players type !balance (check now) and !teams (show gap). Admin commands (!balance on/off/status) work either way.";
         case "ChatCommandCooldown":       return "Seconds between uses of the chat commands (server-wide).";
-        case "bAnnounce":                 return "Broadcast balancing results and mode changes to chat.";
+        case "bAnnounce":                 return "Show balancing news to everyone (on screen and in chat): queued and completed moves, cancellations, ON/OFF. When off, only the players being moved are told.";
         case "bLogSightings":             return "Record each GUID's names and IPs for the new-GUID/alt report.";
         case "bDisableStockBalancing":    return "Switch off the game's own team balancing while this mutator runs.";
         case "DefaultUnknownRating":      return "Mu assigned to GUIDs missing from the ratings file (never-rated players use 25).";

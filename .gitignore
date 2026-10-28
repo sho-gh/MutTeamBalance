@@ -2,6 +2,14 @@
 TeamBalanceRatings.ini
 TeamBalanceSightings.ini
 
+# Real settings for the ratings upload script (FTP login). The
+# .example.psd1 copy is committed instead.
+Tools/GetPlayerRankings.config.psd1
+UploadHistory.log
+
+# Previous developer's plan, kept out for now
+MutSkillCTF*.pdf
+
 # Server settings (may hold admin choices for a specific server)
 MutTeamBalance.ini
 
