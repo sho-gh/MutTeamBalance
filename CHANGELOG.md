@@ -21,9 +21,15 @@ Versions 1.0.6 to 1.1.1 have not yet been tested on a live server.
   move, and a WebAdmin save could write "off" into `UT2004.ini` permanently.
   `bDisableStockBalancing` is removed, and bot balancing (`bBalanceTeams`)
   is no longer touched.
+- Numbers in chat, `!teams`, `!balance status` and the server log no longer
+  carry a stray `.00` ("avg 31.2.00"). Found by starting a local server.
 - Moves made during warmup no longer count toward `MaxMovesPerPlayer`; the
   counts are reset when the match starts.
 - WebAdmin: "Enable !balance / !teams" listed with the other chat settings.
+- On-screen notices are white with only the team name in team colour (were
+  fully red, blue or yellow, the same colours as the CTF flag alerts). The
+  chat line and server log stay plain text. `TeamBalanceMsg_V1` was rebuilt
+  for this before its first release.
 - Ratings upload script `Tools/GetPlayerRankings.ps1` added (replaces
   `validate_ratings.py`):
   - alt GUIDs get the numbers of the member's most-played GUID; before, an

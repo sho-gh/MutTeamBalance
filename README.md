@@ -5,7 +5,7 @@ It keeps teams even by moving players between them using each player's skill
 rating, and it tells everyone what it is doing.
 
 It is a server-side mutator. Players download only one small message package
-(about 6 KB), which draws the balancing notices at the top of the screen.
+(about 9 KB), which draws the balancing notices at the top of the screen.
 
 **Version 1.1.1** (see [CHANGELOG.md](CHANGELOG.md)). Builds with UCC 3374
 (0 errors, 0 warnings). The last version tested on a live server is 1.0.5;
@@ -163,10 +163,14 @@ switched it off, and a WebAdmin save could have written that to the ini.
 ## What players see
 
 With `bTopMessages` on (the default), notices appear at the top of the
-screen, under the game's own CTF notices ("You have the flag…"), in team
-colour. Each notice also goes to the chat feed with the details, such as the
-team averages (shown only with `MinPlayersToShowRatings` or more players,
-default 6) or the reason for a cancellation.
+screen, in the same stack as the game's own CTF notices ("You have the
+flag…"): each message gets its own line, in the order they arrive, so they
+never overlap. The text is white with only the team name in team colour, so
+it can't be mistaken for the yellow and red flag alerts. Notices for the
+player concerned ("You…") use the bigger font. Each notice also goes to the
+chat feed with the details, such as the team averages (shown only with
+`MinPlayersToShowRatings` or more players, default 6) or the reason for a
+cancellation.
 
 | Everyone sees (needs `bAnnounce`) | The player concerned sees (needs `bNotifyMoved`) |
 |---|---|

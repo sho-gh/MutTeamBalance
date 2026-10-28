@@ -23,8 +23,15 @@ players are needed (separate PCs or accounts).
 - [ ] Match start: living players are queued ("will switch at their next
       death") and switch when they die. Note how many queued moves are
       cancelled as "no longer needed" when several are queued at once.
-- [ ] Top-of-screen notices appear under the CTF notices ("You have the
-      flag..."), in team colour, and the details line appears in chat.
+- [ ] Top-of-screen notices share the stack with the CTF notices ("You have
+      the flag..."), one per line, no overlap; the details line appears in chat.
+- [ ] Notices are white with the team name in red/blue. Watch the fade at the
+      end: if the coloured word stays solid while the white text fades, note it
+      (fallback: plain white text).
+- [ ] With a custom HUD mod (e.g. UTComp), if the server or players use one,
+      the notices still appear in the right place.
+- [ ] On a 4:3 screen, a long notice with long player names doesn't run into
+      the chat text at the top left.
 - [ ] Count the notices per move (ours + the game's own "joined the Blue
       team" message): is it too many?
 - [ ] A moved player cannot switch straight back to the bigger team.

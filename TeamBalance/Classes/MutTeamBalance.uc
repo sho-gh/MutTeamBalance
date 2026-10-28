@@ -23,6 +23,8 @@
 //            back, and a WebAdmin save could write "off" into UT2004.ini for
 //            good. bDisableStockBalancing is removed; bots' balancing
 //            (bBalanceTeams) is no longer touched.
+//          * numbers in chat and the log printed with a stray ".00"
+//            ("avg 31.2.00"): Fmt1 used %, which is float-only.
 //          * moves made during warmup no longer count toward
 //            MaxMovesPerPlayer: the counts are reset when the match starts.
 // v1.1.0 - Player notifications:
@@ -1465,7 +1467,8 @@ static function string Fmt1(float V)
 
     I = Round(V * 10.0);
     if (I < 0) { Sign = "-"; I = -I; }
-    return Sign $ (I / 10) $ "." $ (I % 10);
+    // Not I % 10: UnrealScript's % is float-only and would print "0.00".
+    return Sign $ (I / 10) $ "." $ (I - (I / 10) * 10);
 }
 
 static function string PadTwo(int V)
